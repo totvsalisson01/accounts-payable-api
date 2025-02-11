@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: Contas a Pagar API
+  datasource:
+    url: jdbc:postgresql://db:5432/contasdb
+    username: contasuser
+    password: contaspwd
+  jpa:
+    hibernate:
+      ddl-auto: validate
