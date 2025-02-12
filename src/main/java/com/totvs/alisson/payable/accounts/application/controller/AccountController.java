@@ -1,9 +1,6 @@
 package com.totvs.alisson.payable.accounts.application.controller;
 
-import com.totvs.alisson.payable.accounts.application.dto.AccountCsvRecord;
-import com.totvs.alisson.payable.accounts.application.dto.AccountRequest;
-import com.totvs.alisson.payable.accounts.application.dto.AccountResponse;
-import com.totvs.alisson.payable.accounts.application.dto.AccountStatusUpdateDTO;
+import com.totvs.alisson.payable.accounts.application.dto.*;
 import com.totvs.alisson.payable.accounts.application.service.CsvExportService;
 import com.totvs.alisson.payable.accounts.application.service.CsvParserService;
 import com.totvs.alisson.payable.accounts.domain.entity.Account;
@@ -15,14 +12,13 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +26,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -54,7 +52,23 @@ public class AccountController {
 
   @PostMapping
   @Operation(summary = "Create a new account", description = "Registers a new account payable")
-  @ApiResponse(responseCode = "201", description = "Account successfully created")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Account successfully created",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = AccountResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)))
+      })
   public ResponseEntity<AccountResponse> create(@Valid @RequestBody AccountRequest request) {
     Account account = accountService.create(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(new AccountResponse(account));
@@ -64,6 +78,23 @@ public class AccountController {
   @Operation(
       summary = "List all accounts",
       description = "Returns a paginated list of accounts payable")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Accounts found",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = Page.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)))
+      })
   public ResponseEntity<Page<AccountResponse>> findAll(
       @RequestParam(required = false) String description,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -82,8 +113,23 @@ public class AccountController {
   @Operation(
       summary = "Get an account by ID",
       description = "Returns details of a specific account")
-  @ApiResponse(responseCode = "200", description = "Account found")
-  @ApiResponse(responseCode = "404", description = "Account not found")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Account found",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = AccountResponse.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Account not found",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)))
+      })
   public ResponseEntity<AccountResponse> getById(@PathVariable Long id) {
     Account account = accountService.getById(id);
     AccountResponse accountResponse = new AccountResponse(account);
@@ -92,8 +138,30 @@ public class AccountController {
 
   @PutMapping("/{id}")
   @Operation(summary = "Update an account", description = "Updates an existing account")
-  @ApiResponse(responseCode = "200", description = "Account successfully updated")
-  @ApiResponse(responseCode = "404", description = "Account not found")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Account successfully updated",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = AccountResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Account not found",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)))
+      })
   public ResponseEntity<AccountResponse> update(
       @PathVariable Long id, @Valid @RequestBody AccountRequest request) {
     Account updatedAccount = accountService.update(id, request);
@@ -104,8 +172,30 @@ public class AccountController {
   @Operation(
       summary = "Update account status",
       description = "Changes the status of an existing account")
-  @ApiResponse(responseCode = "200", description = "Status successfully updated")
-  @ApiResponse(responseCode = "404", description = "Account not found")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Status successfully updated",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = AccountResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Account not found",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)))
+      })
   public ResponseEntity<AccountResponse> updateStatus(
       @PathVariable Long id, @Valid @RequestBody AccountStatusUpdateDTO accountStatusUpdateDTO) {
 
@@ -121,6 +211,20 @@ public class AccountController {
   @Operation(
       summary = "Calculate total paid",
       description = "Returns the total amount paid within a period")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Total paid calculated",
+            content = @Content(mediaType = "application/json", schema = @Schema(type = "number"))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)))
+      })
   public ResponseEntity<Double> getTotalPaid(
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -130,8 +234,19 @@ public class AccountController {
 
   @DeleteMapping("/{id}")
   @Operation(summary = "Delete an account", description = "Removes an existing account")
-  @ApiResponse(responseCode = "204", description = "Account successfully deleted")
-  @ApiResponse(responseCode = "404", description = "Account not found")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "204",
+            description = "Account successfully deleted"),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Account not found",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)))
+      })
   public ResponseEntity<Void> delete(@PathVariable Long id) {
     accountService.delete(id);
     return ResponseEntity.noContent().build();
@@ -141,11 +256,27 @@ public class AccountController {
   @Operation(
       summary = "Import accounts from a CSV file",
       description = "Upload a CSV file to import accounts.")
-  @ApiResponse(
-      responseCode = "200",
-      description = "CSV file processed successfully. Returns a CSV file with results.")
-  @ApiResponse(responseCode = "400", description = "Invalid file or file format.")
-  @ApiResponse(responseCode = "500", description = "Internal server error.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "CSV file processed successfully. Returns a CSV file with results.",
+            content = @Content(mediaType = "text/plain", schema = @Schema(type = "string"))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid file or file format.",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Internal server error.",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)))
+      })
   public ResponseEntity<?> importAccountsFromCsv(
       @RequestPart("file")
           @Parameter(
@@ -176,11 +307,28 @@ public class AccountController {
   }
 
   @ExceptionHandler(InvalidAccountStatusException.class)
-  public ResponseEntity<Map<String, Object>> handleBadRequest(Exception ex) {
-    Map<String, Object> errorDetails = new LinkedHashMap<>();
-    errorDetails.put("timestamp", LocalDateTime.now());
-    errorDetails.put("message", ex.getMessage());
-    errorDetails.put("status", 400);
-    return ResponseEntity.badRequest().body(errorDetails);
+  public ResponseEntity<ErrorResponse> handleBadRequest(InvalidAccountStatusException ex) {
+    ErrorResponse errorResponse =
+        new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+    return ResponseEntity.badRequest().body(errorResponse);
+  }
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<ErrorResponse> handleValidationExceptions(
+      MethodArgumentNotValidException ex) {
+
+    FieldError error = ex.getBindingResult().getFieldError();
+
+    String errorMessage;
+    if (error != null) {
+      errorMessage = error.getDefaultMessage();
+    } else {
+      errorMessage = "Validation error";
+    }
+
+    ErrorResponse errorResponse =
+        new ErrorResponse(LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), errorMessage);
+
+    return ResponseEntity.badRequest().body(errorResponse);
   }
 }
