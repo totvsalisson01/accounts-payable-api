@@ -10,7 +10,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-  @Query("SELECT SUM(c.amount) FROM Account c WHERE c.paymentDate BETWEEN :startDate AND :endDate")
+  @Query(
+      "SELECT SUM(COALESCE(c.amount, 0)) FROM Account c WHERE c.paymentDate BETWEEN :startDate AND :endDate")
   Double findTotalPaidInPeriod(
       @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }
