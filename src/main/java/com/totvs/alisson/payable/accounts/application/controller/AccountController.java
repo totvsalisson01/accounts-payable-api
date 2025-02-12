@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.io.IOException;
@@ -34,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/accounts")
 @Tag(name = "Accounts Payable", description = "API for managing accounts payable")
+@SecurityRequirement(name = "bearerAuth")
 public class AccountController {
 
   private final AccountService accountService;
@@ -236,9 +238,7 @@ public class AccountController {
   @Operation(summary = "Delete an account", description = "Removes an existing account")
   @ApiResponses(
       value = {
-        @ApiResponse(
-            responseCode = "204",
-            description = "Account successfully deleted"),
+        @ApiResponse(responseCode = "204", description = "Account successfully deleted"),
         @ApiResponse(
             responseCode = "404",
             description = "Account not found",
