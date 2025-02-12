@@ -7,6 +7,7 @@ import com.totvs.alisson.payable.accounts.domain.enums.AccountStatusEnum;
 import com.totvs.alisson.payable.accounts.domain.exception.AccountNotFoundException;
 import com.totvs.alisson.payable.accounts.domain.factory.AccountFactory;
 import com.totvs.alisson.payable.accounts.domain.repository.AccountRepository;
+import com.totvs.alisson.payable.accounts.domain.validation.AccountValidator;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,10 +21,12 @@ import org.springframework.stereotype.Service;
 public class AccountService {
 
   private final AccountRepository repository;
+  private final AccountValidator validator;
 
   @Autowired
-  public AccountService(AccountRepository repository) {
+  public AccountService(AccountRepository repository, AccountValidator validator) {
     this.repository = repository;
+    this.validator = validator;
   }
 
   public Account create(AccountRequest request) {
@@ -67,25 +70,37 @@ public class AccountService {
 
     for (AccountCsvRecord record : records) {
       try {
-        Account account = new Account();
-        account.setAmount(record.getAmount());
-        account.setDueDate(record.getDueDate());
-        account.setPaymentDate(record.getPaymentDate());
-        account.setDescription(record.getDescription());
-        account.setStatus(record.getStatus());
+        AccountRequest accountRequest = createAccountRequestFromRecord(record);
+        List<String> validationErrors = validator.validate(accountRequest);
 
-        repository.save(account);
+        if (!validationErrors.isEmpty()) {
+          record.setImportStatus("ERROR");
+          record.setErrorMessage(String.join(". ", validationErrors));
+        } else {
+          Account account = AccountFactory.createFrom(accountRequest);
+          repository.save(account);
+          record.setImportStatus("SUCCESS");
+          record.setErrorMessage(null);
+        }
 
-        record.setImportStatus("SUCCESS");
-        record.setErrorMessage(null);
       } catch (Exception e) {
         record.setImportStatus("ERROR");
-        record.setErrorMessage(e.getMessage());
+        record.setErrorMessage("An unexpected error occurred: " + e.getMessage());
       }
 
       processedRecords.add(record);
     }
 
     return processedRecords;
+  }
+
+  private AccountRequest createAccountRequestFromRecord(AccountCsvRecord record) {
+    AccountRequest accountRequest = new AccountRequest();
+    accountRequest.setAmount(record.getAmount());
+    accountRequest.setDueDate(record.getDueDate());
+    accountRequest.setPaymentDate(record.getPaymentDate());
+    accountRequest.setDescription(record.getDescription());
+    accountRequest.setStatus(record.getStatus());
+    return accountRequest;
   }
 }
