@@ -53,7 +53,7 @@ public class AccountController {
   }
 
   @PostMapping
-  @Operation(summary = "Create a new account", description = "Registers a new accounts payable")
+  @Operation(summary = "Create a new account", description = "Registers a new account payable")
   @ApiResponse(responseCode = "201", description = "Account successfully created")
   public ResponseEntity<AccountResponse> create(@Valid @RequestBody AccountRequest request) {
     Account account = accountService.create(request);
@@ -84,9 +84,10 @@ public class AccountController {
       description = "Returns details of a specific account")
   @ApiResponse(responseCode = "200", description = "Account found")
   @ApiResponse(responseCode = "404", description = "Account not found")
-  public ResponseEntity<Account> getById(@PathVariable Long id) {
+  public ResponseEntity<AccountResponse> getById(@PathVariable Long id) {
     Account account = accountService.getById(id);
-    return ResponseEntity.ok(account);
+    AccountResponse accountResponse = new AccountResponse(account);
+    return ResponseEntity.ok(accountResponse);
   }
 
   @PutMapping("/{id}")
@@ -105,12 +106,15 @@ public class AccountController {
       description = "Changes the status of an existing account")
   @ApiResponse(responseCode = "200", description = "Status successfully updated")
   @ApiResponse(responseCode = "404", description = "Account not found")
-  public ResponseEntity<Account> updateStatus(
+  public ResponseEntity<AccountResponse> updateStatus(
       @PathVariable Long id, @Valid @RequestBody AccountStatusUpdateDTO accountStatusUpdateDTO) {
+
     Account updatedAccount =
         accountService.updateStatus(
             id, AccountStatusEnum.fromString(accountStatusUpdateDTO.getStatus()));
-    return ResponseEntity.ok(updatedAccount);
+
+    AccountResponse accountResponse = new AccountResponse(updatedAccount);
+    return ResponseEntity.ok(accountResponse);
   }
 
   @GetMapping("/total-paid")
