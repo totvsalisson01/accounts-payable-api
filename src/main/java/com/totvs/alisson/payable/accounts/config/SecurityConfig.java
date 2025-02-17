@@ -1,5 +1,7 @@
-package com.totvs.alisson.payable.accounts.security;
+package com.totvs.alisson.payable.accounts.config;
 
+import com.totvs.alisson.payable.accounts.security.JwtFilter;
+import com.totvs.alisson.payable.accounts.security.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
